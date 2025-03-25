@@ -1,4 +1,3 @@
-// LanguageSwitcher.tsx
 import React from 'react';
 import { View, Button } from 'react-native';
 import i18n from '../../../i18n';

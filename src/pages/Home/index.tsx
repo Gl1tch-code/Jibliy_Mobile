@@ -1,4 +1,3 @@
-// In CategoriesTestUI.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -8,7 +7,7 @@ import {
   ActivityIndicator,
   Button,
 } from "react-native";
-import { fetchCategoriesFromApi } from "../../services/categoryService"; // Import the new function
+import { fetchCategoriesFromApi } from "../../services/categoryService";
 import Logout from "../../core/Logout";
 
 interface Category {

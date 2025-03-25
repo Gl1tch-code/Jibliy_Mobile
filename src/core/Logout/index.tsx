@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { useCallback } from 'react';
-import { Alert, Button, View } from 'react-native'; // Import Alert
+import { Alert, Button, View } from 'react-native';
 
 type RootParamList = {
   Login: undefined;

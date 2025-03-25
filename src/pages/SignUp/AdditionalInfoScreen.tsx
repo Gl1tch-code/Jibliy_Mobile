@@ -1,4 +1,3 @@
-// AdditionalInfoScreen.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -228,7 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderColor: "#E0E0E0",
     borderWidth: 1,
-    overflow: "hidden", // Important for iOS
+    overflow: "hidden",
   },
   gradientButton: {
     borderRadius: 10,

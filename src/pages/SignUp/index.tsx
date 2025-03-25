@@ -1,4 +1,3 @@
-// SignupScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -37,7 +36,6 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Using state for input values
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -51,7 +49,6 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
       setLoading(true);
       setError(null);
 
-      // Validation
       if (!emailRegex.test(email)) {
         setError(t("invalidEmail"));
         setLoading(false);
@@ -86,7 +83,6 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
         }
 
         const id: string = await response.text();
-        console.log("Initial signup successful:", id);
 
         const userId = id;
         if (typeof userId === "string") {

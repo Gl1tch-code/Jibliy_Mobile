@@ -23,7 +23,7 @@ import "./i18n";
 import AdditionalInfoScreen from "./src/pages/SignUp/AdditionalInfoScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Stack = createNativeStackNavigator(); // Correct usage
+const Stack = createNativeStackNavigator();
 
 const App = () => {
   const [cairoFontsLoaded] = useFonts({

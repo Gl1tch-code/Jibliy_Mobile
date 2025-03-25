@@ -1,11 +1,11 @@
 import SQLite from 'react-native-sqlite-storage';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system'; // Import expo-file-system
+import * as FileSystem from 'expo-file-system';
 
 let dbLocation = 'default';
 
 if (Platform.OS === 'android') {
-    dbLocation = `${FileSystem.documentDirectory}productCatalog.db`; // Use FileSystem.documentDirectory
+    dbLocation = `${FileSystem.documentDirectory}productCatalog.db`;
 }
 
 const db = SQLite.openDatabase(
@@ -17,7 +17,6 @@ const db = SQLite.openDatabase(
     error => console.error('Database opening error:', error),
 );
 
-// Initialization of the Categories Table
 export const initCategoriesTable = () => {
     db.transaction(tx => {
         tx.executeSql(
@@ -29,7 +28,6 @@ export const initCategoriesTable = () => {
     });
 };
 
-// Get all categories from the database
 export const getCategoriesFromDb = () => {
     return new Promise((resolve, reject) => {
         db.transaction(tx => {
@@ -50,7 +48,6 @@ export const getCategoriesFromDb = () => {
     });
 };
 
-// Fetch categories from the API and store them in the database
 export const fetchCategoriesFromApiAndStore = async (apiEndpoint, token) => {
     try {
         const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
@@ -65,7 +62,7 @@ export const fetchCategoriesFromApiAndStore = async (apiEndpoint, token) => {
         const apiCategories = await response.json();
 
         db.transaction(tx => {
-            tx.executeSql('DELETE FROM categories', []); // Clear existing categories
+            tx.executeSql('DELETE FROM categories', []);
             apiCategories.forEach(category => {
                 tx.executeSql(
                     'INSERT INTO categories (id, name, imageUrl) VALUES (?, ?, ?)',
