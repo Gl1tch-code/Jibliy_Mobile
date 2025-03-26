@@ -8,59 +8,72 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import AuthPageesWrapper from "../../components/AuthPagesWrapper";
 import { RootStackParamList } from "../../utils/type";
 import { base_url } from "../../utils/constants";
+import { useRoute } from "@react-navigation/core";
 import Show from "../../core/Show";
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<
+type ConfirmResetScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "Login"
+  "Reset"
 >;
 
-interface LoginScreenProps {
-  navigation: LoginScreenNavigationProp;
+interface ConfirmResetScreenProps {
+  navigation: ConfirmResetScreenNavigationProp;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+const ConfirmResetScreen: React.FC<ConfirmResetScreenProps> = ({
+  navigation,
+}) => {
   const { t } = useTranslation();
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [otp, setOtp] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const route = useRoute<any>();
+  const { email } = route.params;
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-  const handleLogin = async () => {
+  const handleResetPasswordReset = async () => {
     if (loading === false) {
       setLoading(true);
       setError(null);
 
-      try {
-        const response = await fetch(
-          `${base_url}/auth/login?username=${username}&password=${password}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(t("somethingWentWrong"));
-        }
-
-        const token: string = await response.text();
-
-        await AsyncStorage.setItem("authToken", token);
-        navigation.navigate("Home");
-      } catch (err: any) {
-        setError(t("emailNotExists"));
-      } finally {
+      if (!passwordRegex.test(password)) {
+        setError(t("invalidPassword"));
         setLoading(false);
+        return;
+      }
+      if (!loading) {
+        try {
+          const response = await fetch(
+            base_url + `/auth/otp-verify?email=${email}&otp=${otp}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: password,
+            }
+          );
+
+          if (!response.ok) {
+            setError(t("wrongOTP"));
+            setLoading(false);
+            return;
+          } else {
+            navigation.navigate("Login");
+          }
+        } catch (err: any) {
+          setError(t("somethingWentWrong"));
+        } finally {
+          setLoading(false);
+        }
       }
     }
   };
@@ -76,15 +89,38 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               fontFamily: "Cairo_600SemiBold",
             }}
           >
-            {t("login")}
+            {t("confirmResetPassTitle")}
           </Text>
           <View>
-            <TextInput
-              style={styles.input}
-              placeholder={t("username")}
-              value={username}
-              onChangeText={setUsername}
-            />
+            <View
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "row-reverse",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 16,
+                  color: "black",
+                  fontFamily: "Cairo_300Light",
+                }}
+              >
+                {t("otp")}
+              </Text>
+              <TextInput
+                style={{ ...styles.input, flex: 1 }}
+                keyboardType="number-pad"
+                placeholder={t("otpInput")}
+                maxLength={6}
+                value={otp}
+                onChangeText={setOtp}
+              />
+            </View>
+
             <TextInput
               style={styles.input}
               placeholder={t("password")}
@@ -109,20 +145,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 </View>
                 <Text style={styles.showPasswordText}>{t("showPass")}</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.showPasswordToggle}
-                onPress={() =>
-                  navigation.navigate("Reset")
-                }
-              >
-                <Text style={styles.showPasswordText}>{t("resetPass")}</Text>
-              </TouchableOpacity>
             </View>
-
             <TouchableOpacity
               style={styles.gradientButton}
-              onPress={handleLogin}
               disabled={loading}
+              onPress={handleResetPasswordReset}
             >
               <LinearGradient
                 colors={["#3931D2", "#E1A3FF"]}
@@ -140,10 +167,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
             {error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.signupText}>
-              <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
-                <Text style={styles.signupLink}>
-                  {t("dontHaveAccountSignUp")}
-                </Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.signupLink}>{t("haveAccountLogin")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -156,7 +181,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   topText: {
     textAlign: "center",
-    width: "100%",
     fontSize: 32,
     color: "white",
     fontFamily: "Poppins_600SemiBold",
@@ -194,11 +218,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-  signupContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
-  },
   signupText: {
     marginTop: 20,
     flexDirection: "row-reverse",
@@ -223,16 +242,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Cairo_600SemiBold",
   },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
   showPasswordToggle: {
     flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginTop: 5,
+    marginBottom: 15,
     width: "auto",
   },
   checkbox: {
@@ -254,4 +269,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default ConfirmResetScreen;

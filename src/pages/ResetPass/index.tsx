@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { LinearGradient } from "expo-linear-gradient";
 import AuthPageesWrapper from "../../components/AuthPagesWrapper";
@@ -16,51 +15,56 @@ import { RootStackParamList } from "../../utils/type";
 import { base_url } from "../../utils/constants";
 import Show from "../../core/Show";
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<
+type ResetScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "Login"
+  "Reset"
 >;
 
-interface LoginScreenProps {
-  navigation: LoginScreenNavigationProp;
+interface ResetScreenProps {
+  navigation: ResetScreenNavigationProp;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+const ResetScreen: React.FC<ResetScreenProps> = ({ navigation }) => {
   const { t } = useTranslation();
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const handleInitialReset = async () => {
     if (loading === false) {
       setLoading(true);
       setError(null);
 
-      try {
-        const response = await fetch(
-          `${base_url}/auth/login?username=${username}&password=${password}`,
-          {
+      if (!emailRegex.test(email)) {
+        setError(t("invalidEmail"));
+        setLoading(false);
+        return;
+      }
+
+      if (!loading) {
+        try {
+          const response = await fetch(base_url + "/auth/otp-request", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
+            body: email.toLowerCase(),
+          });
+
+          if (!response.ok) {
+            setError(t("somethingWentWrong"));
+            setLoading(false);
+            return;
+          } else {
+            navigation.navigate("ResetOTPConfirm", { email: email });
           }
-        );
-
-        if (!response.ok) {
-          throw new Error(t("somethingWentWrong"));
+        } catch (err: any) {
+          setError(t("emailNotExists"));
+        } finally {
+          setLoading(false);
         }
-
-        const token: string = await response.text();
-
-        await AsyncStorage.setItem("authToken", token);
-        navigation.navigate("Home");
-      } catch (err: any) {
-        setError(t("emailNotExists"));
-      } finally {
-        setLoading(false);
       }
     }
   };
@@ -76,53 +80,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               fontFamily: "Cairo_600SemiBold",
             }}
           >
-            {t("login")}
+            {t("resetPassTitle")}
           </Text>
           <View>
             <TextInput
               style={styles.input}
-              placeholder={t("username")}
-              value={username}
-              onChangeText={setUsername}
+              keyboardType="email-address"
+              placeholder={t("email")}
+              value={email}
+              onChangeText={setEmail}
             />
-            <TextInput
-              style={styles.input}
-              placeholder={t("password")}
-              secureTextEntry={!passwordVisible}
-              value={password}
-              onChangeText={setPassword}
-            />
-            <View
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                width: "100%",
-                flexDirection: "row-reverse",
-              }}
-            >
-              <TouchableOpacity
-                style={styles.showPasswordToggle}
-                onPress={() => setPasswordVisible(!passwordVisible)}
-              >
-                <View style={styles.checkbox}>
-                  {passwordVisible && <View style={styles.checkboxChecked} />}
-                </View>
-                <Text style={styles.showPasswordText}>{t("showPass")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.showPasswordToggle}
-                onPress={() =>
-                  navigation.navigate("Reset")
-                }
-              >
-                <Text style={styles.showPasswordText}>{t("resetPass")}</Text>
-              </TouchableOpacity>
-            </View>
 
             <TouchableOpacity
               style={styles.gradientButton}
-              onPress={handleLogin}
               disabled={loading}
+              onPress={handleInitialReset}
             >
               <LinearGradient
                 colors={["#3931D2", "#E1A3FF"]}
@@ -140,10 +112,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </TouchableOpacity>
             {error && <Text style={styles.error}>{error}</Text>}
             <View style={styles.signupText}>
-              <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
-                <Text style={styles.signupLink}>
-                  {t("dontHaveAccountSignUp")}
-                </Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.signupLink}>{t("haveAccountLogin")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -194,11 +164,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
-  signupContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 20,
-  },
   signupText: {
     marginTop: 20,
     flexDirection: "row-reverse",
@@ -223,35 +188,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Cairo_600SemiBold",
   },
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  showPasswordToggle: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 5,
-    width: "auto",
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 1,
-    borderColor: "#6A1B9A",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkboxChecked: {
-    width: 12,
-    height: 12,
-    backgroundColor: "#6A1B9A",
-  },
-  showPasswordText: {
-    color: "#6A1B9A",
-    fontFamily: "Cairo_400Regular",
-  },
 });
 
-export default LoginScreen;
+export default ResetScreen;

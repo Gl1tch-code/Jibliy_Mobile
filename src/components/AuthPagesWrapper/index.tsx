@@ -22,8 +22,8 @@ const AuthPageesWrapper: React.FC<ScreenProps> = ({ children, contentStyle }) =>
     <LinearGradient
       colors={["#3931D2", "#706BDF", "#AAA6FA"]}
       style={styles.container}
-      start={{ x: 0, y: 0.5 }}
-      end={{ x: 1, y: 0.5 }}
+      start={{ x: 0.2, y: 0 }}
+      end={{ x: 1, y: 0.3 }}
     >
       <View style={styles.textContainer}>
         <Text style={styles.topText}>{t("jibliy")}</Text>
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   topText: {
     textAlign: "center",
     width: "100%",
-    fontSize: 36,
+    fontSize: 32,
     color: "white",
     fontFamily: "Poppins_600SemiBold",
   },

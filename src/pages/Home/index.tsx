@@ -7,8 +7,12 @@ import {
   ActivityIndicator,
   Button,
 } from "react-native";
-import { fetchCategoriesFromApi } from "../../services/categoryService";
+import { useTranslation } from "react-i18next";
 import Logout from "../../core/Logout";
+import { base_url } from "../../utils/constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import LoadingPage from "../../components/LoadingScreen";
+import Show from "../../core/Show";
 
 interface Category {
   id: number;
@@ -16,7 +20,8 @@ interface Category {
   imageUrl?: string;
 }
 
-const CategoriesTestUI: React.FC = () => {
+const HomeScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,47 +30,61 @@ const CategoriesTestUI: React.FC = () => {
     const loadData = async () => {
       setLoading(true);
       setError(null);
+
       try {
-        const apiCategories = await fetchCategoriesFromApi(
-          "http://192.168.1.110:8080/categories",
-          "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMSJ9.riyoyPvbBvulVmg0y0cufSr2EBMVg6iDv9yNmfbbw5c"
-        );
-        setCategories(apiCategories);
-      } catch (err: any) {
-        setError(err.message);
+        const token = await AsyncStorage.getItem("authToken");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const response = await fetch(base_url + "/categories", {
+          headers: headers,
+        });
+
+        if (response.ok) {
+          const apiCategories = await response.json();
+          setCategories(apiCategories);
+        } else {
+          setError(t("somethingWentWrong"));
+        }
+      } catch (error) {
+        setError(t("somethingWentWrong"));
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
       }
     };
 
     loadData();
   }, []);
 
-  if (loading) {
-    return <ActivityIndicator size="large" />;
-  }
-
-  if (error) {
-    return <Text>Error: {error}</Text>;
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Home</Text>
-      <FlatList
-        data={categories}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.itemText}>{item.name}</Text>
-            {item.imageUrl && (
-              <Text style={styles.itemText}>Image URL: {item.imageUrl}</Text>
+    <>
+      <Show if={loading}>
+        <LoadingPage />
+      </Show>
+      <Show if={!loading && (error === null || error === undefined)}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Home</Text>
+          {error && <Text>Error: {error}</Text>}
+
+          <FlatList
+            data={categories}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.item}>
+                <Text style={styles.itemText}>{item.name}</Text>
+                {item.imageUrl && (
+                  <Text style={styles.itemText}>
+                    Image URL: {item.imageUrl}
+                  </Text>
+                )}
+              </View>
             )}
-          </View>
-        )}
-      />
-      <Logout />
-    </View>
+          />
+          <Logout />
+        </View>
+      </Show>
+    </>
   );
 };
 
@@ -99,4 +118,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CategoriesTestUI;
+export default HomeScreen;

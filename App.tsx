@@ -17,11 +17,14 @@ import {
   useFonts as usePoppins,
   Poppins_400Regular,
   Poppins_600SemiBold,
+  Poppins_700Bold,
   Poppins_800ExtraBold,
 } from "@expo-google-fonts/poppins";
 import "./i18n";
 import AdditionalInfoScreen from "./src/pages/SignUp/AdditionalInfoScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ResetScreen from "./src/pages/ResetPass";
+import ConfirmResetScreen from "./src/pages/ResetPass/ResetOTPConfirm";
 
 const Stack = createNativeStackNavigator();
 
@@ -35,17 +38,19 @@ const App = () => {
   const [poppinsFontsLoaded] = usePoppins({
     Poppins_400Regular,
     Poppins_600SemiBold,
+    Poppins_700Bold,
     Poppins_800ExtraBold,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState<string | null>(null);
 
   useEffect(() => {
+    setIsLoading(true)
     const checkToken = async () => {
       try {
         const token = await AsyncStorage.getItem("authToken");
         if (token !== null) {
-          setInitialRoute("Categories");
+          setInitialRoute("Home");
         } else {
           setInitialRoute("Login");
         }
@@ -80,12 +85,22 @@ const App = () => {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="Reset"
+              component={ResetScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ResetOTPConfirm"
+              component={ConfirmResetScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="AdditionalInfo"
               component={AdditionalInfoScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Categories"
+              name="Home"
               component={CategoriesTestUI}
               options={{ headerShown: false }}
             />

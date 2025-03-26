@@ -12,14 +12,9 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
 import AuthPageesWrapper from "../../components/AuthPagesWrapper";
 import { LinearGradient } from "expo-linear-gradient";
+import { RootStackParamList } from "../../utils/type";
 import Show from "../../core/Show";
-
-type RootStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-  Categories: undefined;
-  AdditionalInfo: { userId: string };
-};
+import { base_url } from "../../utils/constants";
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -67,7 +62,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
 
       try {
         const response = await fetch(
-          "http://192.168.1.110:8080/auth/initialSignup",
+          base_url + "/auth/initialSignup",
           {
             method: "POST",
             headers: {
@@ -178,7 +173,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
               <View style={styles.signupText}>
                 <TouchableOpacity onPress={() => navigation.navigate("Login")}>
                   <Text style={styles.signupLink}>
-                    {t("dontHaveAccountLogin")}
+                    {t("haveAccountLogin")}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -194,7 +189,7 @@ const styles = StyleSheet.create({
   topText: {
     textAlign: "center",
     width: "100%",
-    fontSize: 36,
+    fontSize: 32,
     color: "white",
     fontFamily: "Cairo_600SemiBold",
   },

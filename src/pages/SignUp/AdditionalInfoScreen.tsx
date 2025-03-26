@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
-  ScrollView,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTranslation } from "react-i18next";
@@ -16,13 +15,9 @@ import * as Location from "expo-location";
 import { useRoute } from "@react-navigation/core";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthPageesWrapper from "../../components/AuthPagesWrapper";
-
-type RootStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-  Categories: undefined;
-  AdditionalInfo: { userId: string };
-};
+import { RootStackParamList } from "../../utils/type";
+import { base_url } from "../../utils/constants";
+import Show from "../../core/Show";
 
 type AdditionalInfoScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -90,10 +85,9 @@ const AdditionalInfoScreen: React.FC<AdditionalInfoScreenProps> = ({
       return;
     }
 
-    try {
-      const response = await fetch(
-        "http://192.168.1.110:8080/auth/updateProfile",
-        {
+    if (!loading) {
+      try {
+        const response = await fetch(base_url + "/auth/updateProfile", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -105,22 +99,22 @@ const AdditionalInfoScreen: React.FC<AdditionalInfoScreenProps> = ({
             phoneNumber,
             location,
           }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || t("updateProfileFailed"));
         }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || t("updateProfileFailed"));
+        const token: string = await response.text();
+        await AsyncStorage.setItem("authToken", token);
+
+        navigation.navigate("Home");
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-
-      const token: string = await response.text();
-      await AsyncStorage.setItem("authToken", token);
-
-      navigation.navigate("Categories");
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -173,10 +167,14 @@ const AdditionalInfoScreen: React.FC<AdditionalInfoScreenProps> = ({
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
               >
-                <Text style={styles.buttonText}>{t("updateProfile")}</Text>
+                <Show if={loading}>
+                  <ActivityIndicator color="#6A1B9A" />
+                </Show>
+                <Show if={!loading}>
+                  <Text style={styles.buttonText}>{t("updateProfile")}</Text>
+                </Show>
               </LinearGradient>
             </TouchableOpacity>
-            {loading && <ActivityIndicator color="#6A1B9A" />}
             {error && <Text style={styles.error}>{error}</Text>}
           </View>
         </View>
@@ -189,7 +187,7 @@ const styles = StyleSheet.create({
   topText: {
     textAlign: "center",
     width: "100%",
-    fontSize: 36,
+    fontSize: 32,
     color: "white",
     fontFamily: "Poppins_600SemiBold",
   },
